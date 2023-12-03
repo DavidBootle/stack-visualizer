@@ -7,7 +7,7 @@ function App() {
 
   const [startAddr, setStartAddr] = useState(1000);
   const [stackVals, setStackVals] = useState([]);
-  const ebp = 0; // the offset of the ebp pointer from the base pointer
+  const [ebp, setEbp] = useState(0); // the offset of the ebp pointer from the base pointer
   const [esp, setEsp] = useState(0); // the offset of the esp pointer from the base pointer
 
   const valueRef = useRef();
@@ -124,6 +124,14 @@ function App() {
               <div className="d-flex">
                 <button type="button" className="btn btn-primary me-2" onClick={() => pushStackVal(sizeRef.current.value, valueRef.current.value)}>Push</button>
                 <button type="button" className="btn btn-primary" onClick={() => popStackVal()}>Pop</button>
+              </div>
+              <div className="d-flex mt-2">
+                <button type="button" className="btn btn-secondary me-2" onClick={() => {
+                  setEbp(esp);
+                }}>%ebp → %esp</button>
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setEsp(ebp);
+                }}>%esp → %ebp</button>
               </div>
             </form>
           </div>
