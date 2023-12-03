@@ -7,6 +7,7 @@ function App() {
 
   const [startAddr, setStartAddr] = useState(1000);
   const [stackVals, setStackVals] = useState([]);
+  const [args, setArgs] = useState([]); // comma seperated list of arguments to push onto the stack [size, value
   const [ebp, setEbp] = useState(0); // the offset of the ebp pointer from the start address
   const [esp, setEsp] = useState(0); // the offset of the esp pointer from the start address
 
@@ -48,6 +49,13 @@ function App() {
     setStackVals(stackVals.slice(0, stackVals.length - 1));
   }
 
+  function addArg(bytes, val) {
+    setArgs([...args, {
+      size: parseInt(bytes),
+      value: val,
+    }])
+  }
+
   window.stackVals = stackVals;
 
   function getStackRows() {
@@ -67,6 +75,21 @@ function App() {
           </td>
           <th scope="row">0x{address}</th>
           <td>{val.value}</td>
+        </tr>
+      )
+    });
+    return components;
+  }
+
+  function getArguments() {
+    let address = startAddr;
+    let components = [...args].reverse().map((arg, index) => {
+      address += arg.size;
+      return (
+        <tr key={index}>
+          <td></td>
+          <th>0x{address}</th>
+          <td>{arg.value}</td>
         </tr>
       )
     });
@@ -111,6 +134,7 @@ function App() {
                   </th>
                   <td>*ret_address</td>
                 </tr>
+                {getArguments()}
               </tbody>
             </table>
 
@@ -143,7 +167,8 @@ function App() {
               </div>
               <div className="d-flex">
                 <button type="button" className="btn btn-primary me-2" onClick={() => pushStackVal(sizeRef.current.value, valueRef.current.value)}>Push</button>
-                <button type="button" className="btn btn-primary" onClick={() => popStackVal()}>Pop</button>
+                <button type="button" className="btn btn-primary me-2" onClick={() => popStackVal()}>Pop</button>
+                <button type="button" className="btn btn-primary" onClick={() => addArg(sizeRef.current.value, valueRef.current.value)}>Add Argument</button>
               </div>
               <div className="d-flex mt-2">
                 <button type="button" className="btn btn-secondary me-2" onClick={() => {
