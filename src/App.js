@@ -7,34 +7,54 @@ function App() {
 
   const [startAddr, setStartAddr] = useState(1000);
   const [stackVals, setStackVals] = useState([]);
-  const [ebp, setEbp] = useState(0); // the offset of the ebp pointer from the base pointer
-  const [esp, setEsp] = useState(0); // the offset of the esp pointer from the base pointer
+  const [ebp, setEbp] = useState(0); // the offset of the ebp pointer from the start address
+  const [esp, setEsp] = useState(0); // the offset of the esp pointer from the start address
 
   const valueRef = useRef();
   const sizeRef = useRef();
 
   function pushStackVal(bytes, val) {
+    if (bytes === 0 || !bytes) {return;}
 
-    setStackVals([...stackVals, {
-      size: bytes,
-      value: val,
-      offset: esp - bytes,
-    }]);
+    let address = startAddr + esp - bytes;
+    // search through stackVals to see if there is already a value at this address
+    let index = stackVals.findIndex((stackVal) => {
+      return startAddr + parseInt(stackVal.offset) === address;
+    });
+
+    if (index !== -1) {
+      // if there is already a value at this address, replace it
+      let newStackVals = [...stackVals];
+      newStackVals[index] = {
+        size: parseInt(bytes),
+        value: val,
+        offset: esp - bytes,
+      };
+      setStackVals(newStackVals);
+    } else {
+      setStackVals([...stackVals, {
+        size: parseInt(bytes),
+        value: val,
+        offset: esp - bytes,
+      }])
+    }
     setEsp(esp - bytes);
   }
 
   function popStackVal() {
+    if (stackVals.length === 0) { return; }
+    if (esp - stackVals[stackVals.length - 1].size > 0) { return; }
+    setEsp(esp + stackVals[stackVals.length - 1].size);
     setStackVals(stackVals.slice(0, stackVals.length - 1));
-    setEsp(esp + 4);
   }
 
   window.stackVals = stackVals;
 
   function getStackRows() {
     let components = [...stackVals].reverse().map((val, index) => {
-      let address = startAddr + ebp + val.offset;
+      let address = startAddr + parseInt(val.offset);
       return (
-        <tr>
+        <tr key={index}>
           <td>
             <div className="d-flex gap-2">
               { startAddr + ebp === address &&
@@ -60,7 +80,7 @@ function App() {
         <div className="card h-100">
             <div className="card-body">
 
-            <table class="table table-striped">
+            <table className="table table-striped">
               <thead>
                 <tr>
                   <th scope="col"></th>
@@ -104,20 +124,20 @@ function App() {
           <div className="card-body">
             <form>
               <div className="mb-3">
-                <label for="startAddr" className="form-label">Start Address</label>
-                <div class="input-group">
-                  <div class="input-group-text">0x</div>
+                <label htmlFor="startAddr" className="form-label">Start Address</label>
+                <div className="input-group">
+                  <div className="input-group-text">0x</div>
                   <input type="number" className="form-control" id="startAddr" value={startAddr} onChange={(e) => setStartAddr(e.target.value)} />
                 </div>
               </div>
               <hr/>
               <div className="row mb-3">
                 <div className="col-9">
-                  <label for="value" className="form-label">Value</label>
+                  <label htmlFor="value" className="form-label">Value</label>
                   <input type="text" className="form-control" id="value" ref={valueRef} />
                 </div>
                 <div className="col-3">
-                  <label for="size" className="form-label">Size</label>
+                  <label htmlFor="size" className="form-label">Size</label>
                   <input type="number" className="form-control" id="size" ref={sizeRef} />
                 </div>
               </div>
@@ -127,11 +147,16 @@ function App() {
               </div>
               <div className="d-flex mt-2">
                 <button type="button" className="btn btn-secondary me-2" onClick={() => {
+                  console.log(esp);
                   setEbp(esp);
                 }}>%ebp → %esp</button>
-                <button type="button" className="btn btn-secondary" onClick={() => {
+                <button type="button" className="btn btn-secondary me-2" onClick={() => {
+                  console.log(ebp);
                   setEsp(ebp);
                 }}>%esp → %ebp</button>
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setEbp(0);
+                }}>Reset Base Pointer</button>
               </div>
             </form>
           </div>
@@ -139,7 +164,7 @@ function App() {
 
         <div className="card w-100 mt-3">
           <div className="card-body">
-            <table class="table">
+            <table className="table">
               <thead>
                 <tr>
                   <th scope="col">Caller Should Save</th>
