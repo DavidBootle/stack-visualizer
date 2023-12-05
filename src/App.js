@@ -22,7 +22,7 @@ function App() {
       lastBasePointers.current.push(ebp);
     }
 
-    let address = startAddr + esp - bytes;
+    let address = startAddr + esp - parseInt(bytes);
     // search through stackVals to see if there is already a value at this address
     let index = stackVals.findIndex((stackVal) => {
       return startAddr + parseInt(stackVal.offset) === address;
@@ -175,7 +175,7 @@ function App() {
                   <label htmlFor="startAddr" className="form-label">Start Address</label>
                   <div className="input-group">
                     <div className="input-group-text">0x</div>
-                    <input type="number" className="form-control" id="startAddr" value={startAddr} onChange={(e) => setStartAddr(e.target.value)} />
+                    <input type="number" className="form-control" id="startAddr" value={startAddr} onChange={(e) => setStartAddr(parseInt(e.target.value))} />
                   </div>
                 </div>
                 <hr/>
